@@ -45,21 +45,19 @@ class KCLSourceOnDynamoDBStreamsSpec
     with DockerControllerSpecSupport
     with Eventually {
   System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true")
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+
+  val testTimeFactor: Int = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
   logger.debug(s"testTimeFactor = $testTimeFactor")
 
-  implicit val defaultPatience: PatienceConfig =
-    PatienceConfig(timeout = Span(60 * testTimeFactor, Seconds), interval = Span(500 * testTimeFactor, Millis))
-  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
-    Map(
-      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
-    )
-  val testTimeFactor: Int          = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
   val region: Regions              = Regions.AP_NORTHEAST_1
   val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
   val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   val hostPort: Int                = temporaryServerPort()
   val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
+
+  implicit val defaultPatience: PatienceConfig =
+    PatienceConfig(timeout = Span(60 * testTimeFactor, Seconds), interval = Span(500 * testTimeFactor, Millis))
+
   val controller: LocalStackController =
     new LocalStackController(
       dockerClient,
@@ -79,6 +77,12 @@ class KCLSourceOnDynamoDBStreamsSpec
         dockerClient.removeContainerCmd(containerId.get).withForce(true)
       }
     }
+
+  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
+    Map(
+      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
+    )
 
   val applicationName: String                = "kcl-source-spec"
   val workerId: String                       = InetAddress.getLocalHost.getCanonicalHostName + ":" + UUID.randomUUID()

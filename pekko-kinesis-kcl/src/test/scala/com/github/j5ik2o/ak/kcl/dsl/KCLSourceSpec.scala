@@ -42,18 +42,16 @@ class KCLSourceSpec
     with Eventually
     with DockerControllerSpecSupport {
   System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true")
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+
+  val testTimeFactor: Int = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
   logger.debug(s"testTimeFactor = $testTimeFactor")
-  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
-    Map(
-      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
-    )
-  val testTimeFactor: Int          = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
+
   val region: Regions              = Regions.AP_NORTHEAST_1
   val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
   val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   val hostPort: Int                = temporaryServerPort()
   val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
+
   val controller: LocalStackController =
     LocalStackController(
       dockerClient,
@@ -66,6 +64,12 @@ class KCLSourceSpec
       edgeHostPort = hostPort,
       hostNameExternal = Some(dockerHost),
       defaultRegion = Some(region.getName)
+    )
+
+  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
+    Map(
+      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
     )
 
   override implicit val patienceConfig: PatienceConfig =

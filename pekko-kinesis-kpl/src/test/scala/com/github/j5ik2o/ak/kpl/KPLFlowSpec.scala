@@ -41,16 +41,12 @@ class KPLFlowSpec
   System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true")
   System.setProperty(SDKGlobalConfiguration.DISABLE_CERT_CHECKING_SYSTEM_PROPERTY, "true")
 
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
-  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
-    Map(
-      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
-    )
   val region: Regions              = Regions.AP_NORTHEAST_1
   val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
   val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   val hostPort: Int                = temporaryServerPort()
   val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
+
   val controller: LocalStackController =
     new LocalStackController(
       dockerClient,
@@ -70,6 +66,13 @@ class KPLFlowSpec
         dockerClient.removeContainerCmd(containerId.get).withForce(true)
       }
     }
+
+  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
+    Map(
+      controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
+    )
+
   var awsKinesisClient: AmazonKinesis                            = _
   var kinesisProducerConfiguration: KinesisProducerConfiguration = _
 
