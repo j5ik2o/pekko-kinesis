@@ -6,7 +6,6 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 pekko-kinesis supports Pekko commponets for AWS Kinesis.
-
 Forked from [akka-kinesis](https://github.com/j5ik2o/akka-kinesis).
 
 ## Support features
