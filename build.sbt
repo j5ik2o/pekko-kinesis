@@ -18,7 +18,7 @@ def crossScalacOptions(scalaVersion: String): Seq[String] =
 
 lazy val baseSettings = Seq(
   organization := "com.github.j5ik2o",
-  homepage := Some(url("https://github.com/j5ik2o/akka-kinesis")),
+  homepage := Some(url("https://github.com/j5ik2o/pekko-kinesis")),
   licenses := List("The MIT License" -> url("http://opensource.org/licenses/MIT")),
   developers := List(
     Developer(
@@ -70,39 +70,41 @@ val dependenciesCommonSettings = Seq(
     scalatest.scalatest % Test
   ),
   libraryDependencies ++= Seq(
-    typesafe.akka.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
-    typesafe.akka.slf4j,
-    typesafe.akka.stream,
-    dimafeng.testcontainersScalatest  % Test,
+    apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
+    apache.pekko.slf4j,
+    apache.pekko.stream,
+    dimafeng.testcontainersScalatest % Test,
     dimafeng.testcontainersLocalstack % Test,
-    typesafe.akka.testkit             % Test,
-    typesafe.akka.streamTestkit       % Test
+    "com.github.j5ik2o" %% "docker-controller-scala-scalatest" % "1.14.148" % Test,
+    "com.github.j5ik2o" %% "docker-controller-scala-localstack" % "1.14.148" % Test,
+    apache.pekko.testkit % Test,
+    apache.pekko.streamTestkit % Test
   ).map(_.cross(CrossVersion.for3Use2_13)),
   Test / fork := true,
   Test / envVars := Map("AWS_CBOR_DISABLE" -> "1")
 )
 
-val `akka-kinesis-kpl` = (project in file("akka-kinesis-kpl"))
+val `pekko-kinesis-kpl` = (project in file("pekko-kinesis-kpl"))
   .settings(baseSettings, dependenciesCommonSettings)
   .settings(
-    name := "akka-kinesis-kpl",
+    name := "pekko-kinesis-kpl",
     libraryDependencies ++= Seq(
       amazonAws.kinesisProducer,
       amazonAws.cloudwatch % Test,
-      amazonAws.dynamodb   % Test
+      amazonAws.dynamodb % Test
     ),
     Test / parallelExecution := false
   )
 
-val `akka-kinesis-kcl` = (project in file("akka-kinesis-kcl"))
+val `pekko-kinesis-kcl` = (project in file("pekko-kinesis-kcl"))
   .settings(baseSettings, dependenciesCommonSettings)
   .settings(
-    name := "akka-kinesis-kcl",
+    name := "pekko-kinesis-kcl",
     libraryDependencies ++= Seq(
       amazonAws.kinesisClient,
       amazonAws.streamKinesisAdaptor % Test,
-      amazonAws.cloudwatch           % Test,
-      amazonAws.dynamodb             % Test
+      amazonAws.cloudwatch % Test,
+      amazonAws.dynamodb % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,
@@ -111,28 +113,28 @@ val `akka-kinesis-kcl` = (project in file("akka-kinesis-kcl"))
     Test / parallelExecution := false
   )
 
-val `akka-kinesis-kcl-dynamodb-streams` = (project in file("akka-kinesis-kcl-dynamodb-streams"))
+val `pekko-kinesis-kcl-dynamodb-streams` = (project in file("pekko-kinesis-kcl-dynamodb-streams"))
   .settings(baseSettings, dependenciesCommonSettings)
   .settings(
-    name := "akka-kinesis-kcl-dynamodb-streams",
+    name := "pekko-kinesis-kcl-dynamodb-streams",
     libraryDependencies ++= Seq(
       amazonAws.kinesisClient,
       amazonAws.dynamodb,
       amazonAws.streamKinesisAdaptor,
       amazonAws.cloudwatch % Test,
-      amazonAws.dynamodb   % Test
+      amazonAws.dynamodb % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,
       scalaLang.scalaJava8Compat
     ).map(_.cross(CrossVersion.for3Use2_13)),
     Test / parallelExecution := false
-  ).dependsOn(`akka-kinesis-kcl` % "compile->compile;test->test")
+  ).dependsOn(`pekko-kinesis-kcl` % "compile->compile;test->test")
 
-val `akka-kinesis-root` = (project in file("."))
+val `pekko-kinesis-root` = (project in file("."))
   .settings(baseSettings)
-  .settings(name := "akka-kinesis-root")
-  .aggregate(`akka-kinesis-kpl`, `akka-kinesis-kcl`, `akka-kinesis-kcl-dynamodb-streams`)
+  .settings(name := "pekko-kinesis-root")
+  .aggregate(`pekko-kinesis-kpl`, `pekko-kinesis-kcl`, `pekko-kinesis-kcl-dynamodb-streams`)
 
 // --- Custom commands
 addCommandAlias("lint", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck;scalafixAll --check")
