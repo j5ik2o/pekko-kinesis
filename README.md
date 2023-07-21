@@ -7,7 +7,7 @@
 
 pekko-kinesis supports Pekko commponets for AWS Kinesis.
 
-Forked from akka-kinesis.
+Forked from [akka-kinesis](https://github.com/j5ik2o/akka-kinesis).
 
 ## Support features
 
