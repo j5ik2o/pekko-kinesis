@@ -3,15 +3,15 @@ package com.github.j5ik2o.ak.kpl.stage
 import java.util.concurrent.ExecutionException
 
 import org.apache.pekko.stream.stage._
-import org.apache.pekko.stream.{Attributes, FlowShape, Inlet, Outlet}
+import org.apache.pekko.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import com.amazonaws.services.kinesis.producer._
-import com.github.j5ik2o.ak.kpl.dsl.KPLFlowSettings.{Exponential, Lineal, RetryBackoffStrategy}
+import com.github.j5ik2o.ak.kpl.dsl.KPLFlowSettings.{ Exponential, Lineal, RetryBackoffStrategy }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.util.{ Failure, Success, Try }
 
 class KPLFlowStage(
     kinesisProducerConfiguration: KinesisProducerConfiguration,

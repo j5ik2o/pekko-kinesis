@@ -2,13 +2,13 @@ package com.github.j5ik2o.ak.kcl.stage
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import org.apache.pekko.stream.stage.{AsyncCallback, _}
-import org.apache.pekko.stream.{Attributes, Outlet, SourceShape}
+import org.apache.pekko.stream.stage.{ AsyncCallback, _ }
+import org.apache.pekko.stream.{ Attributes, Outlet, SourceShape }
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.kinesis.AmazonKinesis
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{ IRecordProcessor, IRecordProcessorFactory }
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
   KinesisClientLibConfiguration,
   LeaderDecider,

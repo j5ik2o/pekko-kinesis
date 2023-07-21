@@ -73,12 +73,12 @@ val dependenciesCommonSettings = Seq(
     apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
     apache.pekko.slf4j,
     apache.pekko.stream,
-    dimafeng.testcontainersScalatest % Test,
+    dimafeng.testcontainersScalatest  % Test,
     dimafeng.testcontainersLocalstack % Test,
-    "com.github.j5ik2o" %% "docker-controller-scala-scalatest" % "1.14.148" % Test,
-    "com.github.j5ik2o" %% "docker-controller-scala-localstack" % "1.14.148" % Test,
-    apache.pekko.testkit % Test,
-    apache.pekko.streamTestkit % Test
+    "com.github.j5ik2o"              %% "docker-controller-scala-scalatest"  % "1.14.148" % Test,
+    "com.github.j5ik2o"              %% "docker-controller-scala-localstack" % "1.14.148" % Test,
+    apache.pekko.testkit              % Test,
+    apache.pekko.streamTestkit        % Test
   ).map(_.cross(CrossVersion.for3Use2_13)),
   Test / fork := true,
   Test / envVars := Map("AWS_CBOR_DISABLE" -> "1")
@@ -91,7 +91,7 @@ val `pekko-kinesis-kpl` = (project in file("pekko-kinesis-kpl"))
     libraryDependencies ++= Seq(
       amazonAws.kinesisProducer,
       amazonAws.cloudwatch % Test,
-      amazonAws.dynamodb % Test
+      amazonAws.dynamodb   % Test
     ),
     Test / parallelExecution := false
   )
@@ -103,8 +103,8 @@ val `pekko-kinesis-kcl` = (project in file("pekko-kinesis-kcl"))
     libraryDependencies ++= Seq(
       amazonAws.kinesisClient,
       amazonAws.streamKinesisAdaptor % Test,
-      amazonAws.cloudwatch % Test,
-      amazonAws.dynamodb % Test
+      amazonAws.cloudwatch           % Test,
+      amazonAws.dynamodb             % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,
@@ -122,7 +122,7 @@ val `pekko-kinesis-kcl-dynamodb-streams` = (project in file("pekko-kinesis-kcl-d
       amazonAws.dynamodb,
       amazonAws.streamKinesisAdaptor,
       amazonAws.cloudwatch % Test,
-      amazonAws.dynamodb % Test
+      amazonAws.dynamodb   % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,

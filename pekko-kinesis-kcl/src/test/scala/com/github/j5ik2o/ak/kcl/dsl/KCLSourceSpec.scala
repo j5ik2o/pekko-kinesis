@@ -1,26 +1,29 @@
 package com.github.j5ik2o.ak.kcl.dsl
 
 import com.amazonaws.SDKGlobalConfiguration
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.cloudwatch.{AmazonCloudWatch, AmazonCloudWatchClientBuilder}
-import com.amazonaws.services.dynamodbv2.{AmazonDynamoDBAsync, AmazonDynamoDBAsyncClientBuilder}
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration}
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClientBuilder }
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
+  InitialPositionInStream,
+  KinesisClientLibConfiguration
+}
 import com.amazonaws.services.kinesis.metrics.impl.NullMetricsFactory
-import com.amazonaws.services.kinesis.model.{PutRecordRequest, Record, ResourceNotFoundException}
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
+import com.amazonaws.services.kinesis.model.{ PutRecordRequest, Record, ResourceNotFoundException }
+import com.amazonaws.services.kinesis.{ AmazonKinesis, AmazonKinesisClientBuilder }
 import com.github.j5ik2o.ak.kcl.util.KCLConfiguration
-import com.github.j5ik2o.dockerController.localstack.{LocalStackController, Service}
-import com.github.j5ik2o.dockerController.{DockerController, DockerControllerSpecSupport, WaitPredicates}
+import com.github.j5ik2o.dockerController.localstack.{ LocalStackController, Service }
+import com.github.j5ik2o.dockerController.{ DockerController, DockerControllerSpecSupport, WaitPredicates }
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.KillSwitches
-import org.apache.pekko.stream.scaladsl.{Keep, Sink}
+import org.apache.pekko.stream.scaladsl.{ Keep, Sink }
 import org.apache.pekko.testkit.TestKit
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.time.{ Millis, Seconds, Span }
 
 import java.net.InetAddress
 import java.nio.ByteBuffer
@@ -28,11 +31,11 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.{Duration, _}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{ Duration, _ }
+import scala.util.{ Failure, Success, Try }
 
 class KCLSourceSpec
-  extends TestKit(ActorSystem("KCLSourceSpec"))
+    extends TestKit(ActorSystem("KCLSourceSpec"))
     with AnyFreeSpecLike
     with Matchers
     with ScalaFutures
@@ -45,22 +48,24 @@ class KCLSourceSpec
     Map(
       controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
     )
-  val testTimeFactor: Int = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
-  val region: Regions = Regions.AP_NORTHEAST_1
-  val accessKeyId: String = "AKIAIOSFODNN7EXAMPLE"
-  val secretAccessKey: String = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-  val hostPort: Int = temporaryServerPort()
+  val testTimeFactor: Int          = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
+  val region: Regions              = Regions.AP_NORTHEAST_1
+  val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
+  val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  val hostPort: Int                = temporaryServerPort()
   val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
   val controller: LocalStackController =
-    LocalStackController(dockerClient,
+    LocalStackController(
+      dockerClient,
       envVars = Map(
-        "DYNAMODB_SHARE_DB" -> "1",
-        "DYNAMODB_IN_MEMORY" -> "1",
-      ))(
+        "DYNAMODB_SHARE_DB"  -> "1",
+        "DYNAMODB_IN_MEMORY" -> "1"
+      )
+    )(
       services = Set(Service.DynamoDB, Service.Kinesis, Service.CloudWatch),
       edgeHostPort = hostPort,
       hostNameExternal = Some(dockerHost),
-      defaultRegion = Some(region.getName),
+      defaultRegion = Some(region.getName)
     )
 
   override implicit val patienceConfig: PatienceConfig =
@@ -70,18 +75,18 @@ class KCLSourceSpec
     )
 
   val applicationName: String = "kcl-source-spec"
-  val streamName: String = sys.env.getOrElse("STREAM_NAME", "kcl-flow-spec") + UUID.randomUUID().toString
-  val workerId: String = InetAddress.getLocalHost.getCanonicalHostName + ":" + UUID.randomUUID()
+  val streamName: String      = sys.env.getOrElse("STREAM_NAME", "kcl-flow-spec") + UUID.randomUUID().toString
+  val workerId: String        = InetAddress.getLocalHost.getCanonicalHostName + ":" + UUID.randomUUID()
 
-  var awsKinesisClient: AmazonKinesis = _
-  var awsDynamoDBClient: AmazonDynamoDBAsync = _
-  var awsCloudWatch: AmazonCloudWatch = _
+  var awsKinesisClient: AmazonKinesis                              = _
+  var awsDynamoDBClient: AmazonDynamoDBAsync                       = _
+  var awsCloudWatch: AmazonCloudWatch                              = _
   var kinesisClientLibConfiguration: KinesisClientLibConfiguration = _
 
   override def afterStartContainers(): Unit = {
     val credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey))
-    val dynamoDbEndpointConfiguration = new EndpointConfiguration(endpointOfLocalStack, region.getName)
-    val kinesisEndpointConfiguration = new EndpointConfiguration(endpointOfLocalStack, region.getName)
+    val dynamoDbEndpointConfiguration   = new EndpointConfiguration(endpointOfLocalStack, region.getName)
+    val kinesisEndpointConfiguration    = new EndpointConfiguration(endpointOfLocalStack, region.getName)
     val cloudwatchEndpointConfiguration = new EndpointConfiguration(endpointOfLocalStack, region.getName)
 
     awsDynamoDBClient = AmazonDynamoDBAsyncClientBuilder

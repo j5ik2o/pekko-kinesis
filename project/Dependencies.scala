@@ -6,8 +6,8 @@ object Dependencies {
     val scala212Version            = "2.12.13"
     val scala213Version            = "2.13.11"
     val scala3Version              = "3.0.0"
-    val awsSdkVersion = "1.12.511"
-    val pekkoVersion = "1.0.0"
+    val awsSdkVersion              = "1.12.511"
+    val pekkoVersion               = "1.0.0"
     val testcontainersScalaVersion = "0.40.14"
     val scalaTestVersion           = "3.2.9"
     val logbackVersion             = "1.2.12"
@@ -16,10 +16,10 @@ object Dependencies {
   object apache {
 
     object pekko {
-      val actor = "org.apache.pekko" %% "pekko-actor" % Versions.pekkoVersion
-      val slf4j = "org.apache.pekko" %% "pekko-slf4j" % Versions.pekkoVersion
-      val stream = "org.apache.pekko" %% "pekko-stream" % Versions.pekkoVersion
-      val testkit = "org.apache.pekko" %% "pekko-testkit" % Versions.pekkoVersion
+      val actor         = "org.apache.pekko" %% "pekko-actor"          % Versions.pekkoVersion
+      val slf4j         = "org.apache.pekko" %% "pekko-slf4j"          % Versions.pekkoVersion
+      val stream        = "org.apache.pekko" %% "pekko-stream"         % Versions.pekkoVersion
+      val testkit       = "org.apache.pekko" %% "pekko-testkit"        % Versions.pekkoVersion
       val streamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % Versions.pekkoVersion
     }
   }

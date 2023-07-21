@@ -4,33 +4,33 @@ import java.nio.ByteBuffer
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.stream.scaladsl.{Keep, Sink, Source}
-import org.apache.pekko.stream.{ActorMaterializer, KillSwitches}
+import org.apache.pekko.stream.scaladsl.{ Keep, Sink, Source }
+import org.apache.pekko.stream.{ ActorMaterializer, KillSwitches }
 import org.apache.pekko.testkit.TestKit
 import com.amazonaws.SDKGlobalConfiguration
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.model.ResourceNotFoundException
-import com.amazonaws.services.kinesis.producer.{KinesisProducerConfiguration, UserRecord, UserRecordResult}
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
+import com.amazonaws.services.kinesis.producer.{ KinesisProducerConfiguration, UserRecord, UserRecordResult }
+import com.amazonaws.services.kinesis.{ AmazonKinesis, AmazonKinesisClientBuilder }
 import com.github.dockerjava.api.command.RemoveContainerCmd
-import com.github.j5ik2o.ak.kpl.dsl.{KPLFlow, KPLFlowSettings}
-import com.github.j5ik2o.dockerController.{DockerController, DockerControllerSpecSupport, WaitPredicates}
-import com.github.j5ik2o.dockerController.localstack.{LocalStackController, Service}
+import com.github.j5ik2o.ak.kpl.dsl.{ KPLFlow, KPLFlowSettings }
+import com.github.j5ik2o.dockerController.{ DockerController, DockerControllerSpecSupport, WaitPredicates }
+import com.github.j5ik2o.dockerController.localstack.{ LocalStackController, Service }
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.testcontainers.DockerClientFactory
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.{Duration, _}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{ Duration, _ }
+import scala.util.{ Failure, Success, Try }
 
 class KPLFlowSpec
-  extends TestKit(ActorSystem("KPLFlowSpec"))
+    extends TestKit(ActorSystem("KPLFlowSpec"))
     with AnyFreeSpecLike
     with BeforeAndAfterAll
     with Matchers
@@ -46,17 +46,19 @@ class KPLFlowSpec
     Map(
       controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
     )
-  val region: Regions = Regions.AP_NORTHEAST_1
-  val accessKeyId: String = "AKIAIOSFODNN7EXAMPLE"
-  val secretAccessKey: String = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-  val hostPort: Int = temporaryServerPort()
+  val region: Regions              = Regions.AP_NORTHEAST_1
+  val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
+  val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  val hostPort: Int                = temporaryServerPort()
   val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
   val controller: LocalStackController =
-    new LocalStackController(dockerClient,
+    new LocalStackController(
+      dockerClient,
       envVars = Map(
-        "DYNAMODB_SHARE_DB" -> "1",
-        "DYNAMODB_IN_MEMORY" -> "1",
-      ))(
+        "DYNAMODB_SHARE_DB"  -> "1",
+        "DYNAMODB_IN_MEMORY" -> "1"
+      )
+    )(
       services = Set(Service.DynamoDB, Service.DynamoDBStreams, Service.CloudWatch),
       edgeHostPort = hostPort,
       hostPorts = Map.empty,
@@ -68,7 +70,7 @@ class KPLFlowSpec
         dockerClient.removeContainerCmd(containerId.get).withForce(true)
       }
     }
-  var awsKinesisClient: AmazonKinesis = _
+  var awsKinesisClient: AmazonKinesis                            = _
   var kinesisProducerConfiguration: KinesisProducerConfiguration = _
 
   val streamName: String = sys.env.getOrElse("STREAM_NAME", "kpl-flow-spec") + UUID.randomUUID().toString
@@ -107,9 +109,9 @@ class KPLFlowSpec
 
   override def afterStartContainers(): Unit = {
     val credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    val host = DockerClientFactory.instance().dockerHostIpAddress()
-    val kinesisPort = hostPort
-    val cloudwatchPort = hostPort
+    val host                = DockerClientFactory.instance().dockerHostIpAddress()
+    val kinesisPort         = hostPort
+    val cloudwatchPort      = hostPort
 
     println(s"kinesis = $kinesisPort, cloudwatch = $cloudwatchPort")
 
