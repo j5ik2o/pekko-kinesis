@@ -7,6 +7,8 @@
 
 pekko-kinesis supports Pekko commponets for AWS Kinesis.
 
+Forked from akka-kinesis.
+
 ## Support features
 
 - KPLFlow
