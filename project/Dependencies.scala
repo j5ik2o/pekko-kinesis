@@ -5,9 +5,9 @@ object Dependencies {
   object Versions {
     val scala212Version            = "2.12.13"
     val scala213Version            = "2.13.11"
-    val scala3Version              = "3.0.0"
-    val awsSdkVersion              = "1.12.519"
-    val pekkoVersion               = "1.0.1"
+    val scala3Version              = "3.3.0"
+    val awsSdkVersion              = "1.12.511"
+    val pekkoVersion               = "1.0.0"
     val testcontainersScalaVersion = "0.40.14"
     val scalaTestVersion           = "3.2.9"
     val logbackVersion             = "1.2.12"
