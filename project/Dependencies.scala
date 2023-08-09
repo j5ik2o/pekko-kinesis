@@ -10,7 +10,7 @@ object Dependencies {
     val pekkoVersion               = "1.0.0"
     val testcontainersScalaVersion = "0.40.14"
     val scalaTestVersion           = "3.2.9"
-    val logbackVersion             = "1.2.12"
+    val logbackVersion             = "1.4.10"
   }
 
   object apache {
