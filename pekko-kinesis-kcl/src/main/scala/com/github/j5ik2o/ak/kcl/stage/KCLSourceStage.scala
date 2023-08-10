@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Queue
+import scala.collection.mutable
 import scala.concurrent.duration.{ FiniteDuration, _ }
 import scala.concurrent.{ ExecutionContext, ExecutionContextExecutorService, Future, Promise }
 import scala.util.control.{ NoStackTrace, NonFatal }
@@ -51,11 +52,15 @@ object KCLSourceStage {
     (
         AsyncCallback[InitializationInput],
         AsyncCallback[RecordSet],
-        AsyncCallback[Try[ShutdownInput]]
+        AsyncCallback[(String, Try[ShutdownInput])]
     ) => IRecordProcessor
 
   type WorkerF =
-    (AsyncCallback[InitializationInput], AsyncCallback[RecordSet], AsyncCallback[Try[ShutdownInput]]) => Worker
+    (
+        AsyncCallback[InitializationInput],
+        AsyncCallback[RecordSet],
+        AsyncCallback[(String, Try[ShutdownInput])]
+    ) => Worker
 
   case class RecordSet(
       recordProcessor: RecordProcessor,
@@ -81,7 +86,7 @@ object KCLSourceStage {
   def newRecordProcessorFactory(
       onInitializeCallback: AsyncCallback[InitializationInput],
       onRecordCallback: AsyncCallback[RecordSet],
-      onShutdownCallback: AsyncCallback[Try[ShutdownInput]]
+      onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
   ): IRecordProcessorFactory =
     () => newDefaultRecordProcessor(onInitializeCallback, onRecordCallback, onShutdownCallback)
 
@@ -106,7 +111,7 @@ object KCLSourceStage {
     (
         onInitializeCallback: AsyncCallback[InitializationInput],
         onRecordCallback: AsyncCallback[RecordSet],
-        onShutdownCallback: AsyncCallback[Try[ShutdownInput]]
+        onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
     ) =>
       {
         new Worker.Builder()
@@ -137,7 +142,7 @@ object KCLSourceStage {
   class RecordProcessor(
       onInitializeCallback: AsyncCallback[InitializationInput],
       onRecordsCallback: AsyncCallback[RecordSet],
-      onShutdownCallback: AsyncCallback[Try[ShutdownInput]]
+      onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
   ) extends IRecordProcessor {
     private[this] val logger                                                   = LoggerFactory.getLogger(getClass)
     private[this] var _shardId: String                                         = _
@@ -188,10 +193,10 @@ object KCLSourceStage {
         try {
           shutdownInput.getCheckpointer.checkpoint()
           logger.debug(s"shutdown: checkpoint saving is success! shardId = $shardId")
-          onShutdownCallback.invoke(Success(shutdownInput))
+          onShutdownCallback.invoke((shardId, Success(shutdownInput)))
         } catch {
           case NonFatal(ex: Throwable) =>
-            onShutdownCallback.invoke(Failure(ex))
+            onShutdownCallback.invoke((shardId, Failure(ex)))
         }
       }
     }
@@ -216,7 +221,7 @@ class KCLSourceStage(
 
       private var worker: Worker = _
 
-      private var shardId: String = _
+      private val shardIds: mutable.HashSet[String] = mutable.HashSet.empty[String]
 
       private var buffer: Queue[RecordSet] = Queue.empty[RecordSet]
 
@@ -224,7 +229,7 @@ class KCLSourceStage(
         log.debug(
           s"onInitializeCallback: initializationInput = shardId:${initializationInput.getShardId}, extendedSequenceNumber:${initializationInput.getExtendedSequenceNumber}, pendingCheckpointSequenceNumber:${initializationInput.getPendingCheckpointSequenceNumber}"
         )
-        shardId = initializationInput.getShardId
+        shardIds += initializationInput.getShardId
       }
 
       private val onRecordSetCallback: AsyncCallback[RecordSet] = getAsyncCallback { recordSet =>
@@ -233,12 +238,12 @@ class KCLSourceStage(
         tryToProduce()
       }
 
-      private val onShutdownCallback: AsyncCallback[Try[ShutdownInput]] = getAsyncCallback {
-        case Success(shutdownInput) =>
+      private val onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])] = getAsyncCallback {
+        case (shardId, Success(shutdownInput)) =>
           log.debug(
             s"onShutdownCallback: checkpoint is success! shutdownInput = shardId:$shardId, shutdownReason:${shutdownInput.getShutdownReason}"
           )
-        case Failure(ex) =>
+        case (shardId, Failure(ex)) =>
           log.error(s"onShutdownCallback: checkpoint is failure!!! shardId = $shardId", ex)
           fail(out, ex)
       }

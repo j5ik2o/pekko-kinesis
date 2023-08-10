@@ -38,7 +38,7 @@ object KCLSourceOnDynamoDBStreams {
           (
               onInitializeCallback: AsyncCallback[InitializationInput],
               onRecordCallback: AsyncCallback[RecordSet],
-              onShutdownCallback: AsyncCallback[Try[ShutdownInput]]
+              onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
           ) =>
             (amazonCloudWatchClientOpt, metricsFactoryOpt) match {
               case (Some(amazonCloudWatchClient), None) =>
@@ -85,7 +85,7 @@ object KCLSourceOnDynamoDBStreams {
         (
             onInitializeCallback: AsyncCallback[InitializationInput],
             onRecordCallback: AsyncCallback[RecordSet],
-            onShutdownCallback: AsyncCallback[Try[ShutdownInput]]
+            onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
         ) =>
           (amazonCloudWatchClientOpt, metricsFactoryOpt) match {
             case (Some(amazonCloudWatchClient), None) =>
