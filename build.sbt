@@ -76,7 +76,7 @@ val dependenciesCommonSettings = Seq(
     dimafeng.testcontainersScalatest  % Test,
     dimafeng.testcontainersLocalstack % Test,
     "com.github.j5ik2o"              %% "docker-controller-scala-scalatest"  % "1.15.30" % Test,
-    "com.github.j5ik2o"              %% "docker-controller-scala-localstack" % "1.15.30" % Test,
+    "com.github.j5ik2o"              %% "docker-controller-scala-localstack" % "1.15.32" % Test,
     apache.pekko.testkit              % Test,
     apache.pekko.streamTestkit        % Test
   ).map(_.cross(CrossVersion.for3Use2_13)),
