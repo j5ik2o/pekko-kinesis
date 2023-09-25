@@ -22,10 +22,9 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.testcontainers.DockerClientFactory
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration.{ Duration, _ }
 import scala.util.{ Failure, Success, Try }
 
@@ -112,7 +111,7 @@ class KPLFlowSpec
 
   override def afterStartContainers(): Unit = {
     val credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    val host                = DockerClientFactory.instance().dockerHostIpAddress()
+    val host                = "localhost"
     val kinesisPort         = hostPort
     val cloudwatchPort      = hostPort
 
@@ -146,8 +145,7 @@ class KPLFlowSpec
 
   "KPLFlow" - {
     "publisher" in {
-      implicit val ec  = system.dispatcher
-      implicit val mat = ActorMaterializer()
+      implicit val ec = system.dispatcher
 
       var result: UserRecordResult = null
       val partitionKey             = "123"

@@ -73,13 +73,11 @@ val dependenciesCommonSettings = Seq(
     apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
     apache.pekko.slf4j,
     apache.pekko.stream,
-    dimafeng.testcontainersScalatest  % Test,
-    dimafeng.testcontainersLocalstack % Test,
-    "com.github.j5ik2o"              %% "docker-controller-scala-scalatest"  % "1.15.33" % Test,
-    "com.github.j5ik2o"              %% "docker-controller-scala-localstack" % "1.15.32" % Test,
-    apache.pekko.testkit              % Test,
-    apache.pekko.streamTestkit        % Test
-  ).map(_.cross(CrossVersion.for3Use2_13)),
+    "com.github.j5ik2o"       %% "docker-controller-scala-scalatest"  % "1.15.33" % Test,
+    "com.github.j5ik2o"       %% "docker-controller-scala-localstack" % "1.15.33" % Test,
+    apache.pekko.testkit       % Test,
+    apache.pekko.streamTestkit % Test
+  ),
   Test / fork := true,
   Test / envVars := Map("AWS_CBOR_DISABLE" -> "1")
 )
@@ -109,7 +107,7 @@ val `pekko-kinesis-kcl` = (project in file("pekko-kinesis-kcl"))
     libraryDependencies ++= Seq(
       iheart.ficus,
       scalaLang.scalaJava8Compat
-    ).map(_.cross(CrossVersion.for3Use2_13)),
+    ),
     Test / parallelExecution := false
   )
 
@@ -127,7 +125,7 @@ val `pekko-kinesis-kcl-dynamodb-streams` = (project in file("pekko-kinesis-kcl-d
     libraryDependencies ++= Seq(
       iheart.ficus,
       scalaLang.scalaJava8Compat
-    ).map(_.cross(CrossVersion.for3Use2_13)),
+    ),
     Test / parallelExecution := false
   ).dependsOn(`pekko-kinesis-kcl` % "compile->compile;test->test")
 
