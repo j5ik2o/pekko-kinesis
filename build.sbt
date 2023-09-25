@@ -73,8 +73,6 @@ val dependenciesCommonSettings = Seq(
     apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
     apache.pekko.slf4j,
     apache.pekko.stream,
-    dimafeng.testcontainersScalatest  % Test,
-    dimafeng.testcontainersLocalstack % Test,
     "com.github.j5ik2o"              %% "docker-controller-scala-scalatest"  % "1.15.32" % Test,
     "com.github.j5ik2o"              %% "docker-controller-scala-localstack" % "1.15.32" % Test,
     apache.pekko.testkit              % Test,
