@@ -145,8 +145,7 @@ class KPLFlowSpec
 
   "KPLFlow" - {
     "publisher" in {
-      implicit val ec  = system.dispatcher
-      implicit val mat = ActorMaterializer()
+      implicit val ec = system.dispatcher
 
       var result: UserRecordResult = null
       val partitionKey             = "123"
