@@ -74,7 +74,7 @@ val dependenciesCommonSettings = Seq(
     apache.pekko.slf4j,
     apache.pekko.stream,
     "com.github.j5ik2o"       %% "docker-controller-scala-scalatest"  % "1.15.33" % Test,
-    "com.github.j5ik2o"       %% "docker-controller-scala-localstack" % "1.15.33" % Test,
+    "com.github.j5ik2o"       %% "docker-controller-scala-localstack" % "1.15.34" % Test,
     apache.pekko.testkit       % Test,
     apache.pekko.streamTestkit % Test
   ),
