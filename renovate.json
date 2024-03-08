@@ -16,6 +16,12 @@
       "matchManagers": ["sbt"],
       "matchPackageNames": ["sbt-ci-release"],
       "enabled": false
+    },
+    {
+      "matchManagers": ["sbt"],
+      "matchPackagePatterns": ["^com\\.amazonaws"],
+      "matchPackageNames": ["amazon-kinesis-producer"],
+      "enabled": false
     }
   ],
   "prHourlyLimit": 0,
