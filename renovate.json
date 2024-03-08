@@ -13,8 +13,8 @@
       "automerge": true
     },
     {
-      "managers": ["sbt"],
-      "packageNames": ["sbt-ci-release"],
+      "matchManagers": ["sbt"],
+      "matchPackageNames": ["sbt-ci-release"],
       "enabled": false
     }
   ],
