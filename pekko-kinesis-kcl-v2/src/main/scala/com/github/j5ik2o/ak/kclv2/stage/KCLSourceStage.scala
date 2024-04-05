@@ -1,33 +1,44 @@
 package com.github.j5ik2o.ak.kclv2.stage
 
 import com.amazonaws.services.schemaregistry.common.Schema
-import com.github.j5ik2o.ak.kclv2.stage.KCLSourceStage.{CommittableRecord, ConfigsBuilderF, RecordSet, SchedulerF, TimerKey}
+import com.github.j5ik2o.ak.kclv2.stage.KCLSourceStage.{
+  CommittableRecord,
+  ConfigsBuilderF,
+  RecordSet,
+  SchedulerF,
+  TimerKey
+}
 import org.apache.pekko.stream.stage._
-import org.apache.pekko.stream.{Attributes, Outlet, SourceShape}
+import org.apache.pekko.stream.{ Attributes, Outlet, SourceShape }
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.services.kinesis.model.{ChildShard, EncryptionType}
+import software.amazon.awssdk.services.kinesis.model.{ ChildShard, EncryptionType }
 import software.amazon.kinesis.checkpoint.CheckpointConfig
 import software.amazon.kinesis.common.ConfigsBuilder
-import software.amazon.kinesis.coordinator.{CoordinatorConfig, Scheduler}
+import software.amazon.kinesis.coordinator.{ CoordinatorConfig, Scheduler }
 import software.amazon.kinesis.leases.LeaseManagementConfig
-import software.amazon.kinesis.lifecycle.{LifecycleConfig, ShutdownReason}
-import software.amazon.kinesis.lifecycle.events.{ProcessRecordsInput, _}
+import software.amazon.kinesis.lifecycle.LifecycleConfig
+import software.amazon.kinesis.lifecycle.events.{ ProcessRecordsInput, _ }
 import software.amazon.kinesis.metrics.MetricsConfig
-import software.amazon.kinesis.processor.{ProcessorConfig, RecordProcessorCheckpointer, ShardRecordProcessor, ShardRecordProcessorFactory}
-import software.amazon.kinesis.retrieval.{KinesisClientRecord, RetrievalConfig}
+import software.amazon.kinesis.processor.{
+  ProcessorConfig,
+  RecordProcessorCheckpointer,
+  ShardRecordProcessor,
+  ShardRecordProcessorFactory
+}
+import software.amazon.kinesis.retrieval.{ KinesisClientRecord, RetrievalConfig }
 
 import java.nio.ByteBuffer
 import java.time.Instant
 import scala.collection.immutable.Queue
 import scala.collection.mutable
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.duration.{ DurationInt, FiniteDuration }
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
-import scala.util.control.{NoStackTrace, NonFatal}
+import scala.util.{ Failure, Success, Try }
+import scala.util.control.{ NoStackTrace, NonFatal }
 
 sealed trait KinesisSchedulerSourceError extends NoStackTrace
 
@@ -48,7 +59,7 @@ object KCLSourceStage {
     def aggregated: Boolean                  = kinesisClientRecord.aggregated()
     def schema: Schema                       = kinesisClientRecord.schema()
 
-    def checkPointAsync()(implicit ec: ExecutionContext): Future[Unit] = Future{ checkPointSync().get }
+    def checkPointAsync()(implicit ec: ExecutionContext): Future[Unit] = Future { checkPointSync().get }
 
     def checkPointSync(): Try[Unit] = Try {
       checkPointer.checkpoint(sequenceNumber, subSequenceNumber)
@@ -72,7 +83,7 @@ object KCLSourceStage {
       onInitializeCallback: AsyncCallback[InitializationInput],
       onRecordsCallback: AsyncCallback[ProcessRecordsInput],
       onLeaseLostCallback: AsyncCallback[(String, LeaseLostInput)],
-      onShardEndedCallback: AsyncCallback[(String,  ShardEndedInput, Try[Unit])],
+      onShardEndedCallback: AsyncCallback[(String, ShardEndedInput, Try[Unit])],
       onShutdownRequestedCallback: AsyncCallback[(String, ShutdownRequestedInput)]
   ) extends ShardRecordProcessorFactory {
     override def shardRecordProcessor(): ShardRecordProcessor =
@@ -92,8 +103,8 @@ object KCLSourceStage {
       onShardEndedCallback: AsyncCallback[(String, ShardEndedInput, Try[Unit])],
       onShutdownRequestedCallback: AsyncCallback[(String, ShutdownRequestedInput)]
   ) extends ShardRecordProcessor {
-    private[this] val logger                                                   = LoggerFactory.getLogger(getClass)
-    private[this] var _shardId: String                                         = _
+    private[this] val logger           = LoggerFactory.getLogger(getClass)
+    private[this] var _shardId: String = _
 
     override def initialize(initializationInput: InitializationInput): Unit = {
       logger.debug(s"initialize:initializationInput = ${initializationInput.toString}")
@@ -115,7 +126,7 @@ object KCLSourceStage {
       logger.debug(s"shardEnded:shardEndedInput = ${shardEndedInput.toString}")
       try {
         shardEndedInput.checkpointer().checkpoint()
-        onShardEndedCallback.invoke((_shardId, shardEndedInput, Success()))
+        onShardEndedCallback.invoke((_shardId, shardEndedInput, Success(())))
       } catch {
         case NonFatal(ex) =>
           logger.error(s"shardEnded: error occurred: ${ex.getMessage}")
@@ -194,30 +205,32 @@ object KCLSourceStage {
   final val TimerKey = "check-scheduler-shutdown"
 
   def from(
-             streamName: String,
-             applicationName: String,
-             kinesisAsyncClient: KinesisAsyncClient,
-             dynamoDbAsyncClient: DynamoDbAsyncClient,
-             cloudWatchAsyncClient: CloudWatchAsyncClient,
-             workerIdentifier: String,
-             checkSchedulerPeriodicity: FiniteDuration = 1.seconds
-           )(implicit ec: ExecutionContext): KCLSourceStage = {
+      streamName: String,
+      applicationName: String,
+      kinesisAsyncClient: KinesisAsyncClient,
+      dynamoDbAsyncClient: DynamoDbAsyncClient,
+      cloudWatchAsyncClient: CloudWatchAsyncClient,
+      workerIdentifier: String,
+      checkSchedulerPeriodicity: FiniteDuration = 1.seconds
+  )(implicit ec: ExecutionContext): KCLSourceStage = {
     val configsBuilderFactory = KCLSourceStage.configsBuilderFactory(
-        streamName,
-        applicationName,
-        kinesisAsyncClient,
-        dynamoDbAsyncClient,
-        cloudWatchAsyncClient,
-        workerIdentifier
-        )
+      streamName,
+      applicationName,
+      kinesisAsyncClient,
+      dynamoDbAsyncClient,
+      cloudWatchAsyncClient,
+      workerIdentifier
+    )
     val schedulerFactory = KCLSourceStage.schedulerFactory()
     new KCLSourceStage(configsBuilderFactory, schedulerFactory, checkSchedulerPeriodicity)
   }
 
-  def apply(configsBuilderFactory: ConfigsBuilderF,
-            schedulerFactory: SchedulerF,
-            checkSchedulerPeriodicity: FiniteDuration = 1.seconds)(implicit ec: ExecutionContext)
-    : KCLSourceStage = new KCLSourceStage(configsBuilderFactory, schedulerFactory, checkSchedulerPeriodicity)
+  def apply(
+      configsBuilderFactory: ConfigsBuilderF,
+      schedulerFactory: SchedulerF,
+      checkSchedulerPeriodicity: FiniteDuration = 1.seconds
+  )(implicit ec: ExecutionContext): KCLSourceStage =
+    new KCLSourceStage(configsBuilderFactory, schedulerFactory, checkSchedulerPeriodicity)
 }
 
 final class KCLSourceStage(
@@ -238,11 +251,12 @@ final class KCLSourceStage(
       private var buffer: Queue[RecordSet]          = Queue.empty[RecordSet]
       private val shardIds: mutable.HashSet[String] = mutable.HashSet.empty[String]
 
-      private val onInitializationCallback: AsyncCallback[InitializationInput] = getAsyncCallback { initializationInput =>
-        log.debug(
-          s"onInitializeCallback: initializationInput = ${initializationInput.toString}"
-        )
-        shardIds += initializationInput.shardId
+      private val onInitializationCallback: AsyncCallback[InitializationInput] = getAsyncCallback {
+        initializationInput =>
+          log.debug(
+            s"onInitializeCallback: initializationInput = ${initializationInput.toString}"
+          )
+          shardIds += initializationInput.shardId
       }
 
       private val onProcessRecordsCallback: AsyncCallback[ProcessRecordsInput] = getAsyncCallback {
@@ -259,15 +273,17 @@ final class KCLSourceStage(
           shardIds -= shardId
       }
 
-      private val onShardEndedCallback: AsyncCallback[(String,  ShardEndedInput, Try[Unit])] = getAsyncCallback {
-        case (shardId, shardEndedInput, result) =>
+      private val onShardEndedCallback: AsyncCallback[(String, ShardEndedInput, Try[Unit])] = getAsyncCallback {
+        case (shardId, shardEndedInput, _) =>
           log.debug(s"onShardEndedCallback: (shardId, shardEndedInput) = ($shardId, ${shardEndedInput.toString})")
           shardIds -= shardId
       }
 
       private val onShutdownRequestedCallback: AsyncCallback[(String, ShutdownRequestedInput)] = getAsyncCallback {
         case (shardId, shutdownRequestedInput) =>
-          log.debug(s"onShutdownRequestedCallback: (shardId, shutdownRequestedInput) = ($shardId, ${shutdownRequestedInput.toString})")
+          log.debug(
+            s"onShutdownRequestedCallback: (shardId, shutdownRequestedInput) = ($shardId, ${shutdownRequestedInput.toString})"
+          )
           shardIds -= shardId
       }
 
@@ -294,7 +310,7 @@ final class KCLSourceStage(
         scheduleAtFixedRate(TimerKey, checkSchedulerPeriodicity, checkSchedulerPeriodicity)
         this.scheduler = scheduler
         val thread = new Thread(scheduler)
-       thread.start()
+        thread.start()
         schedulerPromise.success(scheduler)
       }
 

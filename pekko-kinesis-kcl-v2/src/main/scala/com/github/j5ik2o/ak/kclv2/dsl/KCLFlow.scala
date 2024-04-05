@@ -10,6 +10,6 @@ object KCLFlow {
   def ofCheckpoint()(implicit ec: ExecutionContext): Flow[CommittableRecord, CommittableRecord, NotUsed] =
     Flow[CommittableRecord]
       .mapAsync(1) { v =>
-        v.checkPointAsync().map{ _ => v }
+        v.checkPointAsync().map { _ => v }
       }
 }

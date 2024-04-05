@@ -69,11 +69,15 @@ val dependenciesCommonSettings = Seq(
     scalatest.scalatest % Test
   ),
   libraryDependencies ++= Seq(
-    apache.pekko.actor ,
+    apache.pekko.actor,
     apache.pekko.slf4j,
     apache.pekko.stream,
-    "com.github.j5ik2o"       %% "docker-controller-scala-scalatest"  % "1.15.34"  % Test excludeAll (ExclusionRule(organization = "org.slf4j")),
-    "com.github.j5ik2o"       %% "docker-controller-scala-localstack" % "1.15.34" % Test excludeAll (ExclusionRule(organization = "org.slf4j")),
+    "com.github.j5ik2o" %% "docker-controller-scala-scalatest" % "1.15.34" % Test excludeAll (ExclusionRule(
+      organization = "org.slf4j"
+    )),
+    "com.github.j5ik2o" %% "docker-controller-scala-localstack" % "1.15.34" % Test excludeAll (ExclusionRule(
+      organization = "org.slf4j"
+    )),
     apache.pekko.testkit       % Test,
     apache.pekko.streamTestkit % Test
   ),
@@ -87,6 +91,7 @@ val `pekko-kinesis-kpl` = (project in file("pekko-kinesis-kpl"))
     name := "pekko-kinesis-kpl",
     libraryDependencies ++= Seq(
       amazonAws.kinesisProducer,
+      amazonAws.kinesis    % Test,
       amazonAws.cloudwatch % Test,
       amazonAws.dynamodb   % Test
     ),
@@ -117,9 +122,9 @@ val `pekko-kinesis-kcl-v2` = (project in file("pekko-kinesis-kcl-v2"))
     name := "pekko-kinesis-kcl-v2",
     libraryDependencies ++= Seq(
       softwareAmazon.KCLv2,
-      softwareAmazon.kinesis              % Test,
-      softwareAmazon.cloudwatch           % Test,
-      softwareAmazon.dynamodb             % Test
+      softwareAmazon.kinesis    % Test,
+      softwareAmazon.cloudwatch % Test,
+      softwareAmazon.dynamodb   % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,
