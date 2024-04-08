@@ -86,7 +86,7 @@ object KCLSourceStage {
       onShardEndedCallback: AsyncCallback[(String, ShardEndedInput, Try[Unit])],
       onShutdownRequestedCallback: AsyncCallback[(String, ShutdownRequestedInput)]
   ) extends ShardRecordProcessorFactory {
-    private[this] val logger           = LoggerFactory.getLogger(getClass)
+    private[this] val logger = LoggerFactory.getLogger(getClass)
     logger.debug("RecordProcessorFactory: start")
     override def shardRecordProcessor(): ShardRecordProcessor = {
       logger.debug("shardRecordProcessor: start")
