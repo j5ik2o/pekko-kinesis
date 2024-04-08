@@ -69,7 +69,7 @@ val dependenciesCommonSettings = Seq(
     scalatest.scalatest % Test
   ),
   libraryDependencies ++= Seq(
-    apache.pekko.actor,
+    apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
     apache.pekko.slf4j,
     apache.pekko.stream,
     "com.github.j5ik2o" %% "docker-controller-scala-scalatest" % "1.15.34" % Test excludeAll (ExclusionRule(

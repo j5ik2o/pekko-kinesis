@@ -86,7 +86,10 @@ object KCLSourceStage {
       onShardEndedCallback: AsyncCallback[(String, ShardEndedInput, Try[Unit])],
       onShutdownRequestedCallback: AsyncCallback[(String, ShutdownRequestedInput)]
   ) extends ShardRecordProcessorFactory {
-    override def shardRecordProcessor(): ShardRecordProcessor =
+    private[this] val logger           = LoggerFactory.getLogger(getClass)
+    logger.debug("RecordProcessorFactory: start")
+    override def shardRecordProcessor(): ShardRecordProcessor = {
+      logger.debug("shardRecordProcessor: start")
       new RecordProcessor(
         onInitializeCallback,
         onRecordsCallback,
@@ -94,6 +97,7 @@ object KCLSourceStage {
         onShardEndedCallback,
         onShutdownRequestedCallback
       )
+    }
   }
 
   private final class RecordProcessor(
@@ -308,8 +312,10 @@ final class KCLSourceStage(
         val scheduler = schedulerFactory(configsBuilder)
         log.debug(s"Created Scheduler instance: scheduler = ${scheduler.applicationName}")
         scheduleAtFixedRate(TimerKey, checkSchedulerPeriodicity, checkSchedulerPeriodicity)
+        scheduler.run()
         this.scheduler = scheduler
         val thread = new Thread(scheduler)
+        thread.setDaemon(true)
         thread.start()
         schedulerPromise.success(scheduler)
       }
@@ -338,6 +344,7 @@ final class KCLSourceStage(
           override def onPull(): Unit = tryToProduce()
         }
       )
+
     }
 
     (logic, schedulerPromise.future)

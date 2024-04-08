@@ -1,46 +1,43 @@
 package com.github.j5ik2o.ak.kclv2.dsl
 
-import com.amazonaws.SDKGlobalConfiguration
 import com.github.j5ik2o.ak.kclv2.stage.KCLSourceStage
-import com.github.j5ik2o.dockerController.localstack.{ LocalStackController, Service }
-import com.github.j5ik2o.dockerController.{ DockerController, DockerControllerSpecSupport, WaitPredicates }
+import com.github.j5ik2o.dockerController.localstack.{LocalStackController, Service}
+import com.github.j5ik2o.dockerController.{DockerController, DockerControllerSpecSupport, WaitPredicates}
+import example.SampleSingle
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.KillSwitches
-import org.apache.pekko.stream.scaladsl.{ Keep, Sink }
+import org.apache.pekko.stream.scaladsl.{Keep, Sink}
 import org.apache.pekko.testkit.TestKit
-import org.scalatest.concurrent.PatienceConfiguration.{ Interval, Timeout }
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.PatienceConfiguration.{Interval, Timeout}
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{ Millis, Seconds, Span }
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
-import software.amazon.awssdk.core.{ SdkBytes, SdkSystemSetting }
-import software.amazon.awssdk.http.Protocol
+import org.scalatest.time.{Millis, Seconds, Span}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.core.{SdkBytes, SdkSystemSetting}
+import software.amazon.awssdk.http.{Protocol, SdkHttpConfigurationOption}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
-import software.amazon.awssdk.services.kinesis.model.{
-  CreateStreamRequest,
-  DescribeStreamRequest,
-  PutRecordRequest,
-  ResourceNotFoundException,
-  StreamStatus
-}
+import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DescribeStreamRequest, PutRecordRequest, ResourceNotFoundException, StreamStatus}
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.kinesis.common.{ InitialPositionInStream, InitialPositionInStreamExtended }
+import software.amazon.awssdk.utils.AttributeMap
+import software.amazon.kinesis.common.{InitialPositionInStream, InitialPositionInStreamExtended}
 import software.amazon.kinesis.leases.LeaseManagementConfig
+import software.amazon.kinesis.retrieval.RetrievalConfig
+import software.amazon.kinesis.retrieval.polling.PollingConfig
 
-import java.net.{ InetAddress, URI }
+import java.net.{InetAddress, URI}
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 import java.util.concurrent.Executors
 import scala.annotation.tailrec
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{ Duration, DurationInt }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.jdk.CollectionConverters._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 class KCLSourceSpec
     extends TestKit(ActorSystem("KCLSourceSpec"))
@@ -50,15 +47,15 @@ class KCLSourceSpec
     with Eventually
     with DockerControllerSpecSupport {
   System.setProperty(SdkSystemSetting.CBOR_ENABLED.property(), "false")
-  System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true")
+  // System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true")
   val testTimeFactor: Int = sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt
   logger.debug(s"testTimeFactor = $testTimeFactor")
 
   val region                       = Region.AP_NORTHEAST_1
-  val accessKeyId: String          = "AKIAIOSFODNN7EXAMPLE"
-  val secretAccessKey: String      = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  val accessKeyId: String          = "access"
+  val secretAccessKey: String      = "secret"
   val hostPort: Int                = temporaryServerPort()
-  val endpointOfLocalStack: String = s"http://$dockerHost:$hostPort"
+  val endpointOfLocalStack: String = s"https://$dockerHost:$hostPort"
 
   val controller: LocalStackController =
     LocalStackController(
@@ -100,8 +97,10 @@ class KCLSourceSpec
     val nettyClient: SdkAsyncHttpClient =
       NettyNioAsyncHttpClient
         .builder()
-        .protocol(Protocol.HTTP1_1)
-        .build()
+        // .protocol(Protocol.HTTP1_1)
+        .buildWithDefaults(AttributeMap.builder()
+        .put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, java.lang.Boolean.TRUE)
+          .build())
 
     awsDynamoDBClient = DynamoDbAsyncClient
       .builder()
@@ -166,7 +165,31 @@ class KCLSourceSpec
 
   import system.dispatcher
 
+
+  def asyncPut(counter: Int): Future[Unit] = Future {
+    val text = s"abc-${counter}"
+    val result = awsKinesisClient
+      .putRecord(
+        PutRecordRequest
+          .builder()
+          .streamName(streamName)
+          .partitionKey("k-1")
+          .data(SdkBytes.fromByteArray(text.getBytes(StandardCharsets.UTF_8))).build()
+      ).join()
+    assert(result.sdkHttpResponse().statusCode() == 200)
+  }
+
+  def loop(counter: Int): Future[Unit] = {
+    asyncPut(counter).flatMap { _ =>
+      Thread.sleep(1000 * 3)
+      loop(counter + 1)
+    }
+  }
+
   "KCLSourceSpec" - {
+    "java" in {
+      new SampleSingle(streamName, region.toString, awsKinesisClient, awsDynamoDBClient, awsCloudWatchClient).run()
+    }
     "should be able to consume message" in {
       var committableRecord: KCLSourceStage.CommittableRecord = null
 
@@ -183,8 +206,8 @@ class KCLSourceSpec
           config.initialPositionInStream(
             InitialPositionInStreamExtended.newInitialPosition(InitialPositionInStream.TRIM_HORIZON)
           )
-        }
-        //   retrievalConfigF = Some({ config: RetrievalConfig => config.retrievalSpecificConfig(new PollingConfig(streamName, awsKinesisClient))})
+        },
+        retrievalConfigF = Some({ config: RetrievalConfig => config.retrievalSpecificConfig(new PollingConfig(streamName, awsKinesisClient))})
       )
 
       val executor = Executors.newSingleThreadExecutor()
@@ -202,18 +225,9 @@ class KCLSourceSpec
 
       Thread.sleep(1000 * 3)
 
-      val text = "abc"
-      logger.debug("---->")
-      val result = awsKinesisClient
-        .putRecord(
-          PutRecordRequest
-            .builder()
-            .streamName(streamName)
-            .partitionKey("k-1")
-            .data(SdkBytes.fromByteArray(text.getBytes(StandardCharsets.UTF_8))).build()
-        ).join()
-      assert(result.sdkHttpResponse().statusCode() == 200)
-      logger.debug("<----")
+      loop(0)
+
+      Thread.sleep(1000* 30)
 
       eventually(Timeout(30.seconds), Interval(1.second)) {
         assert(committableRecord != null)
