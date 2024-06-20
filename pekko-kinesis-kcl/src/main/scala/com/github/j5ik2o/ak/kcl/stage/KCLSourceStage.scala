@@ -62,7 +62,7 @@ object KCLSourceStage {
         AsyncCallback[(String, Try[ShutdownInput])]
     ) => Worker
 
-  case class RecordSet(
+  final case class RecordSet(
       recordProcessor: RecordProcessor,
       shardId: String,
       extendedSequenceNumber: ExtendedSequenceNumber,
@@ -139,7 +139,7 @@ object KCLSourceStage {
       }
   }
 
-  class RecordProcessor(
+  final class RecordProcessor(
       onInitializeCallback: AsyncCallback[InitializationInput],
       onRecordsCallback: AsyncCallback[RecordSet],
       onShutdownCallback: AsyncCallback[(String, Try[ShutdownInput])]
@@ -203,7 +203,7 @@ object KCLSourceStage {
   }
 }
 
-class KCLSourceStage(
+final class KCLSourceStage(
     checkWorkerPeriodicity: FiniteDuration = 1.seconds,
     workerF: WorkerF
 )(implicit ec: ExecutionContext)
