@@ -10,7 +10,7 @@ object Dependencies {
     val pekkoVersion               = "1.0.0"
     val testcontainersScalaVersion = "0.40.14"
     val scalaTestVersion           = "3.2.17"
-    val logbackVersion             = "1.2.12"
+    val logbackVersion             = "1.5.3"
   }
 
   object apache {
@@ -29,8 +29,15 @@ object Dependencies {
     val cloudwatch           = "com.amazonaws" % "aws-java-sdk-cloudwatch"          % Versions.awsSdkVersion
     val dynamodb             = "com.amazonaws" % "aws-java-sdk-dynamodb"            % Versions.awsSdkVersion
     val kinesisProducer      = "com.amazonaws" % "amazon-kinesis-producer"          % "0.14.12"
-    val kinesisClient        = "com.amazonaws" % "amazon-kinesis-client"            % "1.15.1"
+    val KCLv1                = "com.amazonaws" % "amazon-kinesis-client"            % "1.15.1"
     val streamKinesisAdaptor = "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
+  }
+
+  object softwareAmazon {
+    val KCLv2      = "software.amazon.kinesis" % "amazon-kinesis-client" % "2.5.7"
+    val kinesis    = "software.amazon.awssdk"  % "kinesis"               % "2.25.24"
+    val dynamodb   = "software.amazon.awssdk"  % "dynamodb"              % "2.25.24"
+    val cloudwatch = "software.amazon.awssdk"  % "cloudwatch"            % "2.25.24"
   }
 
   object iheart {
