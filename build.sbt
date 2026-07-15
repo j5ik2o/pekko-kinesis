@@ -65,7 +65,6 @@ lazy val baseSettings = Seq(
 
 val dependenciesCommonSettings = Seq(
   libraryDependencies ++= Seq(
-    amazonAws.kinesis,
     logback.classic     % Test,
     scalatest.scalatest % Test
   ),
@@ -73,8 +72,12 @@ val dependenciesCommonSettings = Seq(
     apache.pekko.actor excludeAll (ExclusionRule(organization = "org.scala-lang.modules")),
     apache.pekko.slf4j,
     apache.pekko.stream,
-    "com.github.j5ik2o"       %% "docker-controller-scala-scalatest"  % "1.15.34" % Test,
-    "com.github.j5ik2o"       %% "docker-controller-scala-localstack" % "1.15.34" % Test,
+    "com.github.j5ik2o" %% "docker-controller-scala-scalatest" % "1.15.34" % Test excludeAll (ExclusionRule(
+      organization = "org.slf4j"
+    )),
+    "com.github.j5ik2o" %% "docker-controller-scala-localstack" % "1.15.34" % Test excludeAll (ExclusionRule(
+      organization = "org.slf4j"
+    )),
     apache.pekko.testkit       % Test,
     apache.pekko.streamTestkit % Test
   ),
@@ -88,6 +91,7 @@ val `pekko-kinesis-kpl` = (project in file("pekko-kinesis-kpl"))
     name := "pekko-kinesis-kpl",
     libraryDependencies ++= Seq(
       amazonAws.kinesisProducer,
+      amazonAws.kinesis    % Test,
       amazonAws.cloudwatch % Test,
       amazonAws.dynamodb   % Test
     ),
@@ -99,10 +103,28 @@ val `pekko-kinesis-kcl` = (project in file("pekko-kinesis-kcl"))
   .settings(
     name := "pekko-kinesis-kcl",
     libraryDependencies ++= Seq(
-      amazonAws.kinesisClient,
+      amazonAws.KCLv1,
       amazonAws.streamKinesisAdaptor % Test,
+      amazonAws.kinesis              % Test,
       amazonAws.cloudwatch           % Test,
       amazonAws.dynamodb             % Test
+    ),
+    libraryDependencies ++= Seq(
+      iheart.ficus,
+      scalaLang.scalaJava8Compat
+    ),
+    Test / parallelExecution := false
+  )
+
+val `pekko-kinesis-kcl-v2` = (project in file("pekko-kinesis-kcl-v2"))
+  .settings(baseSettings, dependenciesCommonSettings)
+  .settings(
+    name := "pekko-kinesis-kcl-v2",
+    libraryDependencies ++= Seq(
+      softwareAmazon.KCLv2,
+      softwareAmazon.kinesis    % Test,
+      softwareAmazon.cloudwatch % Test,
+      softwareAmazon.dynamodb   % Test
     ),
     libraryDependencies ++= Seq(
       iheart.ficus,
@@ -116,9 +138,10 @@ val `pekko-kinesis-kcl-dynamodb-streams` = (project in file("pekko-kinesis-kcl-d
   .settings(
     name := "pekko-kinesis-kcl-dynamodb-streams",
     libraryDependencies ++= Seq(
-      amazonAws.kinesisClient,
+      amazonAws.KCLv1,
       amazonAws.dynamodb,
       amazonAws.streamKinesisAdaptor,
+      amazonAws.kinesis    % Test,
       amazonAws.cloudwatch % Test,
       amazonAws.dynamodb   % Test
     ),
@@ -132,7 +155,7 @@ val `pekko-kinesis-kcl-dynamodb-streams` = (project in file("pekko-kinesis-kcl-d
 val `pekko-kinesis-root` = (project in file("."))
   .settings(baseSettings)
   .settings(name := "pekko-kinesis-root")
-  .aggregate(`pekko-kinesis-kpl`, `pekko-kinesis-kcl`, `pekko-kinesis-kcl-dynamodb-streams`)
+  .aggregate(`pekko-kinesis-kpl`, `pekko-kinesis-kcl`, `pekko-kinesis-kcl-v2`, `pekko-kinesis-kcl-dynamodb-streams`)
 
 // --- Custom commands
 addCommandAlias("lint", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck;scalafixAll --check")
