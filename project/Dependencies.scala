@@ -3,9 +3,9 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val scala212Version            = "2.12.13"
-    val scala213Version            = "2.13.11"
-    val scala3Version              = "3.3.1"
+    val scala212Version            = "2.12.19"
+    val scala213Version            = "2.13.14"
+    val scala3Version              = "3.3.3"
     val awsSdkVersion              = "1.12.543"
     val pekkoVersion               = "1.0.0"
     val testcontainersScalaVersion = "0.40.14"
@@ -31,6 +31,13 @@ object Dependencies {
     val kinesisProducer      = "com.amazonaws" % "amazon-kinesis-producer"          % "0.14.12"
     val kinesisClient        = "com.amazonaws" % "amazon-kinesis-client"            % "1.15.1"
     val streamKinesisAdaptor = "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
+  }
+
+  object softwareAmazon {
+    val KCLv2      = "software.amazon.kinesis" % "amazon-kinesis-client" % "2.5.8"
+    val kinesis    = "software.amazon.awssdk"  % "kinesis"               % "2.25.24"
+    val dynamodb   = "software.amazon.awssdk"  % "dynamodb"              % "2.25.24"
+    val cloudwatch = "software.amazon.awssdk"  % "cloudwatch"            % "2.25.24"
   }
 
   object iheart {
