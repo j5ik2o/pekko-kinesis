@@ -31,7 +31,7 @@ class KPLFlowStage(
       inheritedAttributes: Attributes
   ): (GraphStageLogic, Future[KinesisProducer]) = {
     val promise = Promise[KinesisProducer]()
-    val logic = new TimerGraphStageLogic(shape) with StageLogging {
+    val logic   = new TimerGraphStageLogic(shape) with StageLogging {
       type Token      = Int
       type RetryCount = Int
 

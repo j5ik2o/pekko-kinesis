@@ -78,7 +78,7 @@ class KCLSourceOnDynamoDBStreamsSpec
       }
     }
 
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val dockerControllers: Vector[DockerController]                         = Vector(controller)
   override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
     Map(
       controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
@@ -148,7 +148,7 @@ class KCLSourceOnDynamoDBStreamsSpec
 
       Thread.sleep(1000)
 
-      val streamArn = table.getTableDescription.getLatestStreamArn
+      val streamArn                                   = table.getTableDescription.getLatestStreamArn
       val credentialsProvider: AWSCredentialsProvider =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey))
 
@@ -169,7 +169,7 @@ class KCLSourceOnDynamoDBStreamsSpec
 
       val executorService = Executors.newCachedThreadPool()
       var result: String  = null
-      val (sw, future) =
+      val (sw, future)    =
         KCLSourceOnDynamoDBStreams
           .withoutCheckpoint(
             kinesisClientLibConfiguration = kinesisClientLibConfiguration,
