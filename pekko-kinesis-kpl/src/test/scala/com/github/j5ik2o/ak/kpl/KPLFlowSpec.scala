@@ -66,7 +66,7 @@ class KPLFlowSpec
       }
     }
 
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val dockerControllers: Vector[DockerController]                         = Vector(controller)
   override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
     Map(
       controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
@@ -89,7 +89,7 @@ class KPLFlowSpec
           println("waiting until stream creates")
           go
         case Failure(ex) => Failure(ex)
-        case _ =>
+        case _           =>
           Thread.sleep(waitDuration.toMillis * sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt)
           println("waiting until stream creates")
           go
@@ -152,7 +152,7 @@ class KPLFlowSpec
       val data                     = "XYZ"
 
       val kplFlowSettings = KPLFlowSettings.byNumberOfShards(1)
-      val (sw, future) = Source
+      val (sw, future)    = Source
         .single(
           new UserRecord()
             .withStreamName(streamName)

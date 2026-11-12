@@ -66,7 +66,7 @@ class KCLSourceSpec
       defaultRegion = Some(region.getName)
     )
 
-  override protected val dockerControllers: Vector[DockerController] = Vector(controller)
+  override protected val dockerControllers: Vector[DockerController]                         = Vector(controller)
   override protected val waitPredicatesSettings: Map[DockerController, WaitPredicateSetting] =
     Map(
       controller -> WaitPredicateSetting(Duration.Inf, WaitPredicates.forLogMessageExactly("Ready."))
@@ -141,7 +141,7 @@ class KCLSourceSpec
           println("waiting until stream creates")
           go
         case Failure(ex) => Failure(ex)
-        case _ =>
+        case _           =>
           Thread.sleep(waitDuration.toMillis * sys.env.getOrElse("TEST_TIME_FACTOR", "1").toInt)
           println("waiting until stream creates")
           go
@@ -166,7 +166,7 @@ class KCLSourceSpec
   "KCLSourceSpec" - {
     "should be able to consume message" in {
       var result: Record = null
-      val (sw, future) = KCLSource
+      val (sw, future)   = KCLSource
         .withoutCheckpoint(
           kinesisClientLibConfiguration,
           amazonKinesisOpt = Some(awsKinesisClient),

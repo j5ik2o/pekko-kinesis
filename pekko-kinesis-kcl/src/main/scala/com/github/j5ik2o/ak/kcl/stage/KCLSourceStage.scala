@@ -169,7 +169,7 @@ object KCLSourceStage {
       val records            = processRecordsInput.getRecords.asScala
       val millisBehindLatest = processRecordsInput.getMillisBehindLatest
       val checkPointer       = processRecordsInput.getCheckpointer
-      val recordSet =
+      val recordSet          =
         RecordSet(
           this,
           _shardId,
@@ -217,7 +217,7 @@ class KCLSourceStage(
       inheritedAttributes: Attributes
   ): (GraphStageLogic, Future[Worker]) = {
     val workerPromise = Promise[Worker]()
-    val logic = new TimerGraphStageLogic(shape) with StageLogging {
+    val logic         = new TimerGraphStageLogic(shape) with StageLogging {
 
       private var worker: Worker = _
 
